@@ -15,7 +15,7 @@ RUN gcc -o setup_t setup/tool.c
 RUN ./setup_t -maintainer "$MAINTAINER" \
         -homepage "$HOMEPAGE" \
         -t lx64 \
-        -m II \
+        -m $MACHINE_TYPE \
         $COMMON_FLAGS \
         > setup.sh
 RUN sed -i '/.*SDL\.h/i printf \"%s\\n\" \"#define SDL_MAIN_HANDLED\" \>\> \"\$\{DestFile\}\"' setup.sh
