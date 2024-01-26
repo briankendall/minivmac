@@ -6,7 +6,7 @@ set -x
 which xcodebuild || echo "No xcode, skipping mac build"; exit 0
 which gcc
 
-declare -a types=("II" "Plus")
+declare -a types=("II" "Plus", "SEFDHD")
 declare -a platforms=("mc64" "mcar")
 MAINTAINER="erichelgeson@gmail.com"
 HOMEPAGE="https://bluescsi.com"

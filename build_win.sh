@@ -5,7 +5,7 @@ set -x
 mkdir -p dist/
 
 #Vars
-declare -a types=("II" "Plus" "SE")
+declare -a types=("II" "Plus" "SEFDHD")
 MAINTAINER="erichelgeson@gmail.com"
 HOMEPAGE="https://bluescsi.com"
 COMMON_FLAGS=${*:-'-n minivmac-3.7-bluescsi -bg 1 '}
