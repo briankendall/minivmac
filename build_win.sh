@@ -15,10 +15,10 @@ do
         docker build -f Dockerfile.win \
                 --target=build \
                 --tag=minivmacwin \
-                --build-arg="MACHINE_TYPE=$type" \
-                --build-arg="MAINTAINER=$MAINTAINER" \
-                --build-arg="HOMEPAGE=$HOMEPAGE" \
-                --build-arg="COMMON_FLAGS=$COMMON_FLAGS" \
+                --build-arg "MACHINE_TYPE=$type" \
+                --build-arg "MAINTAINER=$MAINTAINER" \
+                --build-arg "HOMEPAGE=$HOMEPAGE" \
+                --build-arg "COMMON_FLAGS=$COMMON_FLAGS" \
                 .
         docker create --name minivmacwin minivmacwin # need to create a container to copy file from
         docker cp minivmacwin:/minivmac.exe dist/minivmac-x64-$type.exe

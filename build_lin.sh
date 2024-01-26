@@ -15,10 +15,10 @@ do
         docker build -f Dockerfile.lin \
                 --target=build \
                 --tag=minivmaclin \
-                --build-arg="MACHINE_TYPE=$type" \
-                --build-arg="MAINTAINER=$MAINTAINER" \
-                --build-arg="HOMEPAGE=$HOMEPAGE" \
-                --build-arg="COMMON_FLAGS=$COMMON_FLAGS" \
+                --build-arg "MACHINE_TYPE=$type" \
+                --build-arg "MAINTAINER=$MAINTAINER" \
+                --build-arg "HOMEPAGE=$HOMEPAGE" \
+                --build-arg "COMMON_FLAGS=$COMMON_FLAGS" \
                 .
         docker create --name minivmaclin minivmaclin # need to create a container to copy file from
         docker cp minivmaclin:/minivmac dist/minivmac-lx64-$type
