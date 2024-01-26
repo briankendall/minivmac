@@ -18,8 +18,8 @@ jobs:
           - macos-latest
         vmac_type:
           - II
-          #- Plus
-          #- SE
+          - Plus
+          - SEFDHD
         host_platform:
           - lx64
           - wx64
@@ -35,7 +35,7 @@ jobs:
           - build_os: macos-latest
             host_platform: wx64
     env:
-      COMMON_FLAGS: "-n minivmac-37-bluescsi -bg 1"
+      COMMON_FLAGS: "-n minivmac-37-bluescsi -bg 1 -sony-tag 1 -sony-sum 1 -sony-dc42 1 -sound 1 -drives 20 "
     steps:
       - uses: actions/checkout@v4
       - name: Compile setup tool
