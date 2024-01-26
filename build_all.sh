@@ -1,4 +1,6 @@
-#!/bin/sh -e -x
+#!/usr/bin/env bash
+set -e
+set -x
 
 rm -rf ./dist
 mkdir -p ./dist

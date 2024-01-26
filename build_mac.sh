@@ -1,7 +1,9 @@
-#!/bin/sh -e -x
+#!/usr/bin/env bash
+set -e
+set -x
 
 # will error/stop if we dont have xcode
-which xcodebuild
+which xcodebuild || echo "No xcode, skipping mac build"; exit 0
 which gcc
 
 declare -a types=("II" "Plus")
