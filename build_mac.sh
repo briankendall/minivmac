@@ -3,10 +3,14 @@ set -e
 set -x
 
 # will error/stop if we dont have xcode
-which xcodebuild || echo "No xcode, skipping mac build"; exit 0
+which xcodebuild
+if [ $? -ne 0 ]; then
+  echo "No xcode, skipping mac build"
+  exit 1
+fi
 which gcc
 
-declare -a types=("II" "Plus", "SEFDHD")
+declare -a types=("II" "Plus" "SEFDHD")
 declare -a platforms=("mc64" "mcar")
 MAINTAINER="erichelgeson@gmail.com"
 HOMEPAGE="https://bluescsi.com"
