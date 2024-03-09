@@ -380,7 +380,7 @@ LOCALPROC WriteBashGccMakeFile(void)
 						" -lcommctrl -lcoredll -laygshell -lmmtimer");
 				} else {
 					WriteCStrToDestFile(
-						" -mwindows -lwinmm -lole32 -luuid");
+						" -mwindows -lwinmm -lole32 -luuid -lwsock32");
 					if (gbk_ide_cyg == cur_ide) {
 						WriteCStrToDestFile(" -mno-cygwin");
 					}
