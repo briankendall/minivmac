@@ -13,6 +13,7 @@ COMMON_FLAGS=${*:-'-n "minivmac-3.7-bluescsi" -bg 1 '}
 for type in "${types[@]}";
 do
         docker build -f Dockerfile.lin \
+                --platform linux/amd64 \
                 --target=build \
                 --tag=minivmaclin \
                 --build-arg "MACHINE_TYPE=$type" \
