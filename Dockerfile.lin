@@ -11,10 +11,12 @@ ARG COMMON_FLAGS="-n minivmac-37-bluescsi -bg 1 "
 
 COPY . /
 RUN gcc -o setup_t setup/tool.c
-
+ENV BIG_SCREEN=
+RUN if [[ "$MACHINE_TYPE" == "II" ]]; then BIG_SCREEN="yes"; fi
 RUN ./setup_t -maintainer "$MAINTAINER" \
         -homepage "$HOMEPAGE" \
         -t lx64 \
+	${BIG_SCREEN:+-hres 1024 -vres 768} \
         -m $MACHINE_TYPE \
         $COMMON_FLAGS \
         > setup.sh

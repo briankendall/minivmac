@@ -8,7 +8,7 @@ mkdir -p dist/
 declare -a types=("II" "Plus" "SEFDHD")
 MAINTAINER="erichelgeson@gmail.com"
 HOMEPAGE="https://bluescsi.com"
-COMMON_FLAGS=${*:-'-n "minivmac-3.7-bluescsi" -bg 1 '}
+COMMON_FLAGS=${*:-'-n minivmac-3.7-bluescsi -bg 1 '}
 
 for type in "${types[@]}";
 do

@@ -3,7 +3,7 @@ FROM ubuntu:22.04 AS setup
 
 RUN apt update
 RUN apt install mingw-w64 build-essential wget -y
-RUN wget https://www.libsdl.org/release/SDL2-devel-2.0.22-mingw.tar.gz
+COPY vdr/SDL2-devel-2.0.22-mingw.tar.gz .
 RUN gzip -dc SDL2-devel-2.0.22-mingw.tar.gz | tar -xvf -
 RUN cd SDL2-2.0.22 && make install-package arch=x86_64-w64-mingw32 prefix=/usr/x86_64-w64-mingw32
 RUN ln -s /usr/bin/x86_64-w64-mingw32-gcc gcc.exe
@@ -19,11 +19,14 @@ ARG COMMON_FLAGS="-n minivmac-37-bluescsi -bg 1 "
 
 COPY . /
 RUN gcc -o setup_t setup/tool.c
+ENV BIG_SCREEN=
+RUN if [[ "$MACHINE_TYPE" == "II" ]]; then BIG_SCREEN="yes"; fi
 
 RUN ./setup_t -maintainer "$MAINTAINER" \
         -homepage "$HOMEPAGE" \
         -m "$MACHINE_TYPE" \
         -e mgw \
+        ${BIG_SCREEN:+-hres 1024 -vres 768} \
         $COMMON_FLAGS \
         -t wx64 \
         > setup.sh

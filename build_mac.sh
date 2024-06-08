@@ -23,10 +23,15 @@ for platform in "${platforms[@]}";
 do
         for type in "${types[@]}";
         do
+		BIG_SCREEN=
+		if [[ "${platforms[@]}" == "II" ]]; then
+			BIG_SCREEN="yes"
+		fi
                 ./setup_t -maintainer $MAINTAINER \
                         -homepage $HOMEPAGE \
                         -t $platform \
                         -m $type \
+			${BIG_SCREEN:+-hres 1024 -vres 768} \
                         $COMMON_FLAGS \
                         -ev 13000 \
                         > setup.sh
