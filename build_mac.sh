@@ -24,7 +24,7 @@ do
         for type in "${types[@]}";
         do
 		BIG_SCREEN=
-		if [[ "${platforms[@]}" == "II" ]]; then
+		if [[ "$type" == "II" ]]; then
 			BIG_SCREEN="yes"
 		fi
                 ./setup_t -maintainer $MAINTAINER \
