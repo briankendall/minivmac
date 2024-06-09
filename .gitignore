@@ -28,3 +28,4 @@ minivmac-*
 # Other
 .DS_Store
 dbglog.txt
+.idea/

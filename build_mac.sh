@@ -10,7 +10,8 @@ if [ $? -ne 0 ]; then
 fi
 which gcc
 
-declare -a types=("II" "Plus" "SEFDHD")
+#declare -a types=("II" "Plus" "SEFDHD")
+declare -a types=("II")
 declare -a platforms=("mc64")
 MAINTAINER="erichelgeson@gmail.com"
 HOMEPAGE="https://bluescsi.com"

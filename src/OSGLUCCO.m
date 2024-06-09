@@ -457,6 +457,78 @@ LOCALPROC dbglog_close0(void)
 
 #include "CONTROLM.h"
 
+/* --- prefs (mimics Basilisk II/SheepShaver prefs to allow code reuse) --- */
+
+typedef struct {
+	char *romPath;
+	int diskPathCount;
+	char **diskPaths;
+	int screenWidth;
+	int screenHeight;
+} Prefs;
+
+LOCALFUNC blnr LoadPrefs(Prefs *prefs) {
+    // search local to global
+	FILE *prefsFile = fopen("./prefs", "r");
+	if (NULL == prefsFile) {
+		fprintf(stderr, "Failed to open prefs file\n");
+		return trueblnr;
+	}
+	prefs->romPath = NULL;
+	prefs->diskPathCount = 0;
+	prefs->screenWidth = 0;
+	prefs->screenHeight = 0;
+
+	char *line = NULL;
+	size_t len = 0;
+	ssize_t read;
+	while ((read = getline(&line, &len, prefsFile)) != -1) {
+		// Trim trailing newline
+		if (line[read - 1] == '\n') {
+			line[read - 1] = '\0';
+		}
+//		fprintf(stderr, "line: %s\n", line);
+
+		char *input = line;
+		char *key = strsep(&input, " ");
+		if (NULL == key) {
+			break;
+		}
+		if (strcmp(key, "rom") == 0) {
+			prefs->romPath = strdup(input);
+		} else if (strcmp(key, "disk") == 0) {
+			if (0 == prefs->diskPathCount) {
+				prefs->diskPaths = malloc(sizeof(char *));
+			} else {
+				prefs->diskPaths = realloc(prefs->diskPaths, sizeof(char *) * (prefs->diskPathCount + 1));
+			}
+			prefs->diskPaths[prefs->diskPathCount] = strdup(input);
+			prefs->diskPathCount++;
+		} else if (strcmp(key, "screen") == 0) {
+			// This currently doesn't work, need to find right place to set/hook into size.
+			if (sscanf(input, "win/%d/%d", &prefs->screenWidth, &prefs->screenHeight) != 2) {
+				break;
+			}
+		} else if(strcmp(key, "magnify") == 0) {
+			WantMagnify = trueblnr;
+		} else if(strcmp(key, "fullscreen") == 0) {
+			WantFullScreen = trueblnr;
+		} else if(strcmp(key, "speed") == 0) {
+			int speed = 0;
+			sscanf(input, "%d", &speed);
+			SetSpeedValue((ui3b)speed);
+		}
+	}
+
+	fclose(prefsFile);
+
+	if (NULL != line) {
+		free(line);
+	}
+
+	return trueblnr;
+}
+
 /* --- text translation --- */
 
 LOCALPROC UniCharStrFromSubstCStr(int *L, unichar *x, char *s)
@@ -797,6 +869,8 @@ LOCALVAR FILE *Drives[NumDrives]; /* open disk image files */
 LOCALVAR NSString *DriveNames[NumDrives];
 #endif
 
+LOCALVAR blnr NeedsInitialImagesRemount = falseblnr;
+
 LOCALPROC InitDrives(void)
 {
 	/*
@@ -965,6 +1039,12 @@ LOCALFUNC tMacErr vSonyEject0(tDrive Drive_No, blnr deleteit)
 		}
 	}
 #endif
+    // When restarting the Mac (via the Special menu command) all disks are
+    // ejected. We set a flag and remount them as soon as possible, so that
+    // the user does not end up with no boot disk.
+    if (Drive_No == 0) {
+        NeedsInitialImagesRemount = trueblnr;
+    }
 
 	return mnvm_noErr;
 }
@@ -1147,8 +1227,14 @@ LOCALFUNC blnr Sony_InsertIth(int i)
 	return v;
 }
 
-LOCALFUNC blnr LoadInitialImages(void)
+LOCALFUNC blnr LoadInitialImages(Prefs prefs)
 {
+	// Load from prefs file
+	if (prefs.diskPathCount != 0) {
+		for (int i = 0; i < prefs.diskPathCount && Sony_Insert1(@(prefs.diskPaths[i]), falseblnr); ++i) {
+			/* stop on first error (including file not found) */
+		}
+	}
 	if (! AnyDiskInserted()) {
 		int i;
 
@@ -1158,6 +1244,23 @@ LOCALFUNC blnr LoadInitialImages(void)
 	}
 
 	return trueblnr;
+}
+
+LOCALFUNC void CheckInitialImagesRemount(void)
+{
+	if (!NeedsInitialImagesRemount) {
+		return;
+	}
+	Prefs prefs;
+	if (!LoadPrefs(&prefs)) {
+		fprintf(stderr, "Could not read prefs for initial images\n");
+		return;
+	}
+	if (!LoadInitialImages(prefs)) {
+		fprintf(stderr, "Could not reload initial images\n");
+		return;
+	}
+	NeedsInitialImagesRemount = falseblnr;
 }
 
 #if IncludeSonyNew
@@ -1264,18 +1367,41 @@ LOCALFUNC tMacErr LoadMacRomFromGlobalDir(void)
 	return err;
 }
 
-LOCALFUNC blnr LoadMacRom(void)
+LOCALFUNC blnr LoadMacRom(Prefs prefs)
 {
-	tMacErr err;
+    blnr v;
+    FILE *ROM_File;
+    int File_Size;
 
-	if (mnvm_fnfErr == (err = LoadMacRomFromAppDir()))
-	if (mnvm_fnfErr == (err = LoadMacRomFromPrefDir()))
-	if (mnvm_fnfErr == (err = LoadMacRomFromGlobalDir()))
-	{
-	}
-
-	(void) err; /* ignore any errors */
-	return trueblnr; /* keep launching Mini vMac, regardless */
+    ROM_File = fopen(prefs.romPath, "rb");
+    if (NULL == ROM_File) {
+        v = falseblnr;
+    } else {
+        File_Size = fread(ROM, 1, kROM_Size, ROM_File);
+        if (kROM_Size != File_Size) {
+            if (feof(ROM_File)) {
+                MacMsgOverride(kStrShortROMTitle,
+                               kStrShortROMMessage);
+                v = falseblnr;
+            } else {
+                MacMsgOverride(kStrNoReadROMTitle,
+                               kStrNoReadROMMessage);
+                v = falseblnr;
+            }
+        } else {
+            v = mnvm_noErr == ROM_IsValid();
+        }
+        fclose(ROM_File);
+    }
+    // old way
+    tMacErr err;
+    if (mnvm_fnfErr == (err = LoadMacRomFromAppDir()))
+        if (mnvm_fnfErr == (err = LoadMacRomFromPrefDir()))
+            if (mnvm_fnfErr == (err = LoadMacRomFromGlobalDir()))
+            {
+            }
+    (void) err; /* ignore any errors */
+    return trueblnr; /* keep launching Mini vMac, regardless */
 }
 
 
@@ -4893,6 +5019,8 @@ label_retry:
 #endif
 	}
 
+	CheckInitialImagesRemount();
+
 	OnTrueTime = TrueEmulatedTime;
 
 #if dbglog_TimeStuff
@@ -5202,6 +5330,7 @@ LOCALPROC UnallocMyMemory(void)
 
 LOCALFUNC blnr InitOSGLU(void)
 {
+	Prefs prefs;
 	blnr IsOk = falseblnr;
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
@@ -5214,8 +5343,9 @@ LOCALFUNC blnr InitOSGLU(void)
 	if (MySound_Init())
 		/* takes a while to stabilize, do as soon as possible */
 #endif
-	if (LoadMacRom())
-	if (LoadInitialImages())
+	if (LoadPrefs(&prefs))
+	if (LoadMacRom(prefs))
+	if (LoadInitialImages(prefs))
 	if (InitCocoaStuff())
 		/*
 			Can get openFile call backs here
