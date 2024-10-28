@@ -5726,10 +5726,92 @@ LOCALPROC myfp_Div(myfpr *r, const myfpr *a, const myfpr *b)
 	*r = floatx80_div(*a, *b);
 }
 
+
+static float floatx80_to_float(floatx80 *fx80) {
+    unsigned int ieee754 = 0;
+    //Bit32s exponent = extractFloatx80Exp(*fx80);
+    //unsigned short sign = extractFloatx80Sign(*fx80);
+    
+    unsigned short sign = (fx80->high & 0x8000) >> 15;
+    int exponent = (fx80->high & 0x7FFF) - 16383 + 127;
+
+    if (exponent <= 0) {
+        // Handle underflow, zero, and subnormal numbers here
+        return sign ? -0.0f : 0.0f;
+    } else if (exponent >= 255) {
+        // Handle overflow, infinity, and NaN here
+        return sign ? (-1.0f / 0.0f) : (1.0f / 0.0f);
+    }
+
+    //Bit64u significand = extractFloatx80Frac(*fx80);
+    // Normalize significand and fit to 23 bits for IEEE 754 float
+    unsigned int significand = (unsigned int)(fx80->low >> (64 - 24)) & 0x7FFFFF;
+
+    // Assemble IEEE 754 representation
+    ieee754 |= (sign << 31) | (exponent << 23) | significand;
+
+    return *(float*)&ieee754;  // Cast to float to return
+}
+
+#include <stdint.h>
+
+static floatx80 float_to_floatx80(float f) {
+    // Extract IEEE 754 components from float
+    uint32_t bits = *(uint32_t*)&f;
+    uint32_t sign = (bits >> 31) & 1;
+    int32_t exponent = ((bits >> 23) & 0xFF) - 127;  // Unbiased exponent
+    uint32_t significand = bits & 0x7FFFFF;          // 23-bit mantissa
+
+    floatx80 fx80 = {0, 0};  // Initialize floatx80 result
+
+    // Handle special cases: zero, infinity, and NaN
+    if (exponent == -127) {  // Zero or subnormal case
+        if (sign == 1) {
+            fx80.high = 0x8000;  // Negative zero
+        }
+        return fx80;  // Already set to zero
+    } else if (exponent == 128) {  // Infinity or NaN case
+        fx80.high = (sign << 15) | 0x7FFF;
+        fx80.low = significand == 0 ? 0 : 0xC000000000000000;  // Infinity or NaN
+        return fx80;
+    }
+
+    // Adjust exponent for floatx80
+    int32_t fx80_exponent = exponent + 16383;
+
+    // Normalize and assemble significand for floatx80 format
+    uint64_t fx80_significand = ((uint64_t)(significand | 0x800000) << 40);  // Add implicit 1
+
+    // Set high and low parts for floatx80
+    fx80.high = (sign << 15) | (uint16_t)fx80_exponent;
+    fx80.low = fx80_significand;
+
+    return fx80;
+}
+
+#include <math.h>
+
 LOCALPROC myfp_Rem(myfpr *r, const myfpr *a, const myfpr *b)
 {
-	*r = floatx80_rem(*a, *b);
+    if (fabsf(floatx80_to_float(b) - 1.570796) < 0.0001) {
+        float aa, bb, rr;
+        aa = floatx80_to_float(a);
+        bb = floatx80_to_float(b);
+        rr = fmodf(aa, (bb*4.0f));
+        //printf("BING!   %f %% %f = %f\n", aa, (bb*4.0f), rr);
+        *r = float_to_floatx80(rr);
+        return;
+    }
+    
+    *r = floatx80_rem(*a, *b);
+    //printf("myfp_Rem! ----- %u %u %% %u %u = %u %u     %f %% %f = %f\n", a->high, a->low, b->high, b->low, r->high, r->low,
+    //       floatx80_to_float(a), floatx80_to_float(b), floatx80_to_float(r));
 }
+
+// LOCALPROC myfp_Rem(myfpr *r, const myfpr *a, const myfpr *b)
+// {
+// 	*r = floatx80_rem(*a, *b);
+// }
 
 LOCALPROC myfp_Sqrt(myfpr *r, myfpr *x)
 {
