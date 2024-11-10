@@ -1772,6 +1772,17 @@ LOCALPROC DoKeyCode(SDL_keysym *r, blnr down)
 #elif 2 == SDL_MAJOR_VERSION
 LOCALPROC DoKeyCode(SDL_Keysym *r, blnr down)
 {
+	int justModifiers = r->mod & (KMOD_CTRL | KMOD_SHIFT | KMOD_ALT | KMOD_GUI);
+	if (r->scancode == SDL_SCANCODE_RETURN &&
+		(justModifiers == KMOD_LALT || justModifiers == KMOD_RALT)) {
+		// Alt+Enter
+		if (down) {
+			ToggleWantFullScreen();
+			NeedWholeScreenDraw = trueblnr;
+		}
+		return;
+	}
+
 	ui3r v = SDLScan2MacKeyCode(r->scancode);
 	if (MKC_None != v) {
 		Keyboard_UpdateKeyMap2(v, down);
