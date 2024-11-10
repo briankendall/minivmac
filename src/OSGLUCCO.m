@@ -24,6 +24,7 @@
 	by Sam Lantinga (but little trace of that remains).
 */
 
+#include <Carbon/Carbon.h>
 #include "OSGCOMUI.h"
 #include "OSGCOMUD.h"
 
@@ -1464,6 +1465,8 @@ LOCALVAR ui3b MyBytesPerPixel;
 LOCALVAR NSOpenGLContext *MyNSOpnGLCntxt = nil;
 LOCALVAR short GLhOffset;
 LOCALVAR short GLvOffset;
+LOCALVAR GLuint texture = 0;
+LOCALVAR GLuint framebuffer = 0;
 	/* OpenGL coordinates of upper left point of drawing area */
 
 
@@ -2030,27 +2033,85 @@ LOCALPROC MyDrawWithOpenGL(ui4r top, ui4r left, ui4r bottom, ui4r right)
 #endif
 
 		[MyNSOpnGLCntxt makeCurrentContext];
+        glClear(GL_COLOR_BUFFER_BIT);
 
-		UpdateLuminanceCopy(top, left, bottom, right);
-		glRasterPos2i(GLhOffset + left2, GLvOffset - top2);
+        UpdateLuminanceCopy(top, left, bottom, right);
+        glRasterPos2i(left2, vMacScreenHeight * (UseMagnify ? MyWindowScale : 1) - top2);
+
+        // Render everything to a texture. Then we can render the texture at whatever size we want, providing a true full screen.
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+        
 #if 0 != vMacScreenDepth
-		if (UseColorMode) {
-			glDrawPixels(right - left,
-				bottom - top,
-				GL_RGBA,
-				GL_UNSIGNED_INT_8_8_8_8,
-				ScalingBuff + (left + top * vMacScreenWidth) * 4
-				);
-		} else
+        if (UseColorMode) {
+            glDrawPixels(right - left,
+                bottom - top,
+                GL_RGBA,
+                GL_UNSIGNED_INT_8_8_8_8,
+                ScalingBuff + (left + top * vMacScreenWidth) * 4
+                );
+        } else
 #endif
-		{
-			glDrawPixels(right - left,
-				bottom - top,
-				GL_LUMINANCE,
-				GL_UNSIGNED_BYTE,
-				ScalingBuff + (left + top * vMacScreenWidth)
-				);
-		}
+        {
+            glDrawPixels(right - left,
+                bottom - top,
+                GL_LUMINANCE,
+                GL_UNSIGNED_BYTE,
+                ScalingBuff + (left + top * vMacScreenWidth)
+                );
+        }
+        
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        
+        NSSize bounds = MyNSview.frame.size;
+        NSRect renderRect;
+        double aspectRatio = (double)vMacScreenWidth / (double)vMacScreenHeight;
+        
+        if ((bounds.width / bounds.height) > aspectRatio) {
+            if (UseFullScreen && WantIntScaling) {
+                double pixelRatio = MyNSview.window.backingScaleFactor;
+                renderRect.size.height = floor(bounds.height / (vMacScreenHeight * pixelRatio)) * vMacScreenHeight * pixelRatio;
+            } else {
+                renderRect.size.height = bounds.height;
+            }
+            
+            renderRect.size.width = renderRect.size.height * aspectRatio;
+            renderRect.origin.x = (bounds.width - renderRect.size.width) / 2;
+            renderRect.origin.y = (bounds.height - renderRect.size.height) / 2;
+        } else {
+            if (UseFullScreen && WantIntScaling) {
+                double pixelRatio = MyNSview.window.backingScaleFactor;
+                renderRect.size.width = floor(bounds.width / (vMacScreenWidth * pixelRatio)) * vMacScreenWidth * pixelRatio;
+            } else {
+                renderRect.size.width = bounds.width;
+            }
+            
+            renderRect.size.width = bounds.width;
+            renderRect.size.height = bounds.width / aspectRatio; 
+            renderRect.origin.x = (bounds.width - renderRect.size.width) / 2;
+            renderRect.origin.y = (bounds.height - renderRect.size.height) / 2;
+        }
+        
+        glBindTexture(GL_TEXTURE_2D, texture);
+        
+        glEnable(GL_TEXTURE_2D);
+        glColor3f(1.0, 1.0, 1.0);
+        glBegin(GL_TRIANGLE_STRIP);
+        
+        glTexCoord2f(0.0, 0.0);
+        glVertex2f(renderRect.origin.x, renderRect.origin.y);
+        
+        glTexCoord2f(1.0, 0.0);
+        glVertex2f(renderRect.origin.x + renderRect.size.width, renderRect.origin.y);
+        
+        glTexCoord2f(0.0, 1.0);
+        glVertex2f(renderRect.origin.x, renderRect.origin.y + renderRect.size.height);
+        
+        glTexCoord2f(1.0, 1.0);
+        glVertex2f(renderRect.origin.x + renderRect.size.width, renderRect.origin.y + renderRect.size.height);
+        
+        glEnd();
+        glDisable(GL_TEXTURE_2D);
 
 #if 0 /* a very quick and dirty check of where drawing */
 		glDrawPixels(right - left,
@@ -3383,6 +3444,7 @@ LOCALPROC UngrabMachine(void)
 LOCALPROC MyAdjustGLforSize(int h, int v)
 {
 	[MyNSOpnGLCntxt makeCurrentContext];
+    int textureWidth = vMacScreenWidth, textureHeight = vMacScreenHeight;
 
 	glClearColor (0.0, 0.0, 0.0, 1.0);
 
@@ -3398,6 +3460,8 @@ LOCALPROC MyAdjustGLforSize(int h, int v)
 #if EnableMagnify
 	if (UseMagnify) {
 		glPixelZoom(MyWindowScale, - MyWindowScale);
+        textureWidth *= MyWindowScale;
+        textureHeight *= MyWindowScale;
 	} else
 #endif
 	{
@@ -3406,7 +3470,28 @@ LOCALPROC MyAdjustGLforSize(int h, int v)
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, vMacScreenWidth);
 
 	glClear(GL_COLOR_BUFFER_BIT);
-
+    
+    if (framebuffer == 0) {
+        glGenFramebuffers(1, &framebuffer);
+    }
+    
+    if (texture != 0) {
+        glDeleteTextures(1, &texture);
+    }
+    
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+#if 0 != vMacScreenDepth
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, textureWidth, textureHeight, 0,  GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, NULL);
+#else
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, textureWidth, textureHeight, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+#endif
+    
 	[NSOpenGLContext clearCurrentContext];
 
 	ScreenChangedAll();
@@ -3783,7 +3868,6 @@ LOCALFUNC blnr CreateMainWindow(void)
 #endif
 	unsigned int style;
 	NSRect MainScrnBounds;
-	NSRect AllScrnBounds;
 	NSRect NewWinRect;
 	NSPoint botleftPos;
 	int NewWindowHeight = vMacScreenHeight;
@@ -3804,17 +3888,6 @@ LOCALFUNC blnr CreateMainWindow(void)
 
 	MainScrnBounds = [[NSScreen mainScreen] frame];
 	SavedScrnBounds = MainScrnBounds;
-	{
-		int i;
-		NSArray *screens = [NSScreen screens];
-		int n = [screens count];
-
-		AllScrnBounds = MainScrnBounds;
-		for (i = 0; i < n; ++i) {
-			AllScrnBounds = NSUnionRect(AllScrnBounds,
-				[[screens objectAtIndex:i] frame]);
-		}
-	}
 
 #if EnableMagnify
 	if (UseMagnify) {
@@ -3870,15 +3943,15 @@ LOCALFUNC blnr CreateMainWindow(void)
 #endif
 #if MayFullScreen
 	{
-		NewWinRect = AllScrnBounds;
+		NewWinRect = MainScrnBounds;
 
-		GLhOffset = botleftPos.x - AllScrnBounds.origin.x;
-		GLvOffset = (botleftPos.y - AllScrnBounds.origin.y)
+		GLhOffset = botleftPos.x - MainScrnBounds.origin.x;
+		GLvOffset = (botleftPos.y - MainScrnBounds.origin.y)
 			+ ((NewWindowHeight < MainScrnBounds.size.height)
 				? NewWindowHeight : MainScrnBounds.size.height);
 
 		hOffset = GLhOffset;
-		vOffset = AllScrnBounds.size.height - GLvOffset;
+		vOffset = MainScrnBounds.size.height - GLvOffset;
 
 		style = MyNSWindowStyleMaskBorderless;
 	}
@@ -4288,6 +4361,11 @@ LOCALPROC ToggleWantFullScreen(void)
 #endif
 }
 #endif
+
+LOCALPROC ToggleWantIntegerScaling(void)
+{
+    WantIntScaling = !WantIntScaling;
+}
 
 /* --- SavedTasks --- */
 
@@ -4712,6 +4790,17 @@ LOCALPROC ProcessEventLocation(NSEvent *event)
 LOCALPROC ProcessKeyEvent(blnr down, NSEvent *event)
 {
 	ui3r scancode = [event keyCode];
+    NSEventModifierFlags justModifiers = event.modifierFlags & (NSEventModifierFlagOption | NSEventModifierFlagCommand |
+                                                                NSEventModifierFlagControl | NSEventModifierFlagShift);
+    
+    if (((scancode == kVK_Return || scancode == kVK_ANSI_KeypadEnter) && justModifiers == NSEventModifierFlagOption) ||
+        (scancode == kVK_ANSI_F && justModifiers == NSEventModifierFlagCommand)) {
+        if (down) {
+            ToggleWantFullScreen();
+            NeedWholeScreenDraw = trueblnr;
+        }
+        return;
+    }
 
 	ProcessEventModifiers(event);
 	Keyboard_UpdateKeyMap2(Keyboard_RemapMac(scancode), down);

@@ -91,6 +91,7 @@
 #define kStrCmdSpeedControl "Geschwindigkeitskontrolle;ll (^s)"
 #define kStrCmdMagnifyToggle "Vergr;uosserung (^g)"
 #define kStrCmdFullScrnToggle "Vollbild (^f)"
+#define kStrCmdFullScrnIntScaleToggle "Ganzzahlskalierung im Vollbildmodus (^i)"
 #define kStrCmdCtrlKeyToggle "Emulierte ;]^m;}-Taste (^k)"
 #define kStrCmdReset "Neustarten (Reset durchf;uuhren)"
 #define kStrCmdInterrupt "Interrupt"
@@ -114,6 +115,7 @@
 #define kStrNewMagnify "Vergr;uo;serung ist ^g"
 
 #define kStrNewFullScreen "Vollbildmodus ist ^f"
+#define kStrNewIntScaling "Ganzzahlskalierung ist ^i."
 
 #define kStrNewCntrlKey "Emulierte ;]^m;}-Taste ^k"
 

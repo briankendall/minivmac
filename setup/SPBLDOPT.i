@@ -357,6 +357,56 @@ LOCALPROC WrtOptInitFullScreen(void)
 }
 
 
+/* option: Initial Integer Scaling */
+
+LOCALVAR blnr CanIntScaling;
+LOCALVAR blnr WantInitIntScaling;
+LOCALVAR ui3r olv_InitIntScaling;
+
+LOCALPROC ResetInitIntScaling(void)
+{
+	WantInitIntScaling = nanblnr;
+	olv_InitIntScaling = 0;
+}
+
+LOCALFUNC tMyErr TryAsInitIntScalingNot(void)
+{
+	return BooleanTryAsOptionNot("-integer-scaling",
+		&WantInitIntScaling, &olv_InitIntScaling);
+}
+
+LOCALFUNC blnr dfo_InitIntScaling(void)
+{
+	return falseblnr;
+}
+
+LOCALFUNC tMyErr ChooseInitIntScaling(void)
+{
+	tMyErr err;
+
+    CanIntScaling = (gbk_apifam_sd2 == gbo_apifam || gbk_apifam_cco == gbo_apifam);
+
+	err = kMyErr_noErr;
+
+	if (nanblnr == WantInitIntScaling) {
+		WantInitIntScaling = dfo_InitIntScaling();
+	} else {
+        if (!CanIntScaling) {
+            err = ReportParseFailure(
+                "-integer-scaling is only supported on SDL2 and Cocoa builds");
+        }
+    }
+
+	return err;
+}
+
+LOCALPROC WrtOptInitIntScaling(void)
+{
+	WrtOptBooleanOption("-integer-scaling",
+		WantInitIntScaling, dfo_InitIntScaling());
+}
+
+
 /* option: Variable FullScreen */
 
 LOCALVAR blnr WantVarFullScreen;
@@ -3841,6 +3891,7 @@ LOCALPROC SPResetCommandLineParameters(void)
 	ResetVResOption();
 	ResetScrnDpthOption();
 	ResetInitFullScreen();
+	ResetInitIntScaling();
 	ResetVarFullScreen();
 	ResetMagFctrOption();
 	ResetInitMagnify();
@@ -3913,6 +3964,7 @@ LOCALFUNC tMyErr TryAsSPOptionNot(void)
 	if (kMyErrNoMatch == (err = TryAsVResOptionNot()))
 	if (kMyErrNoMatch == (err = TryAsScrnDpthOptionNot()))
 	if (kMyErrNoMatch == (err = TryAsInitFullScreenNot()))
+	if (kMyErrNoMatch == (err = TryAsInitIntScalingNot()))
 	if (kMyErrNoMatch == (err = TryAsVarFullScreenNot()))
 	if (kMyErrNoMatch == (err = TryAsMagFctrOptionNot()))
 	if (kMyErrNoMatch == (err = TryAsInitMagnifyNot()))
@@ -3989,6 +4041,7 @@ LOCALFUNC tMyErr AutoChooseSPSettings(void)
 	if (kMyErr_noErr == (err = ChooseVRes()))
 	if (kMyErr_noErr == (err = ChooseScrnDpth()))
 	if (kMyErr_noErr == (err = ChooseInitFullScreen()))
+	if (kMyErr_noErr == (err = ChooseInitIntScaling()))
 	if (kMyErr_noErr == (err = ChooseVarFullScreen()))
 	if (kMyErr_noErr == (err = ChooseMagFctr()))
 	if (kMyErr_noErr == (err = ChooseInitMagnify()))
@@ -4071,6 +4124,7 @@ LOCALPROC WrtOptSPSettings(void)
 	WrtOptVResOption();
 	WrtOptScrnDpth();
 	WrtOptInitFullScreen();
+	WrtOptInitIntScaling();
 	WrtOptVarFullScreen();
 	WrtOptMagFctrOption();
 	WrtOptInitMagnify();

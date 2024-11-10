@@ -107,6 +107,7 @@
 #define kStrCmdSpeedControl "Kontrola brzine;ll (^s)"
 #define kStrCmdMagnifyToggle "Prekida;vc lupe (^g)"
 #define kStrCmdFullScrnToggle "Prekida;vc re;vzima celog ekrana (^f)"
+#define kStrCmdFullScrnIntScaleToggle "Tselobrojno skaliranje preko tselog ekrana (^i)"
 #define kStrCmdCtrlKeyToggle "Prekida;vc emulisanog tastera ;]^m;} (^k)"
 #define kStrCmdReset "Resetuj"
 #define kStrCmdInterrupt "Prekid"
@@ -130,6 +131,7 @@
 #define kStrNewMagnify "Pribli;vzi je ^g."
 
 #define kStrNewFullScreen "Ceo ekran je ^f."
+#define kStrNewIntScaling "Tselobrojno skaliranje je ^i."
 
 #define kStrNewCntrlKey "Emulisani taster ;]^m;} je ^k."
 
