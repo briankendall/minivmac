@@ -175,6 +175,8 @@ LOCALPROC WriteAppSpecificCNFUDOSGoptions(void)
 		WantVarFullScreen || WantInitFullScreen);
 	WriteCompCondBool("MayNotFullScreen",
 		WantVarFullScreen || ! WantInitFullScreen);
+	WriteCompCondBool("CanIntScaling", CanIntScaling);
+	WriteCompCondBool("WantInitIntScaling", WantInitIntScaling);
 
 	WriteCompCondBool("WantInitMagnify", WantInitMagnify);
 

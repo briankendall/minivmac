@@ -91,6 +91,7 @@
 #define kStrCmdSpeedControl "Ovl;ead;ean;ei rychlosti;ll (^s)"
 #define kStrCmdMagnifyToggle "P;vribl;ei;vzen;ei (^g)"
 #define kStrCmdFullScrnToggle "Cel;ea obrazovka (^f)"
+#define kStrCmdFullScrnIntScaleToggle "Cel;`a obrazovka celo;vc;eiseln;ee ;vsk;`alov;`an;ei (^i)"
 #define kStrCmdCtrlKeyToggle "P;vrep;ein;ean;ei emulovan;eeho ;]^m;} (^k)"
 #define kStrCmdReset "Reset"
 #define kStrCmdInterrupt "Vyru;vsit"
@@ -114,6 +115,7 @@
 #define kStrNewMagnify "P;vribl;ei;vzen;ei: ^g."
 
 #define kStrNewFullScreen "Na celou obrazovku: ^f."
+#define kStrNewIntScaling "M;ve;vr;eitko cel;eeho ;vc;eisla je ^i."
 
 #define kStrNewCntrlKey "Emulovan;ey ;]^m;}: ^k."
 

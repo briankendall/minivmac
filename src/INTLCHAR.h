@@ -1693,6 +1693,7 @@ LOCALVAR blnr RunInBackground = (WantInitRunInBackground != 0);
 
 #if VarFullScreen
 LOCALVAR blnr WantFullScreen = (WantInitFullScreen != 0);
+LOCALVAR blnr WantIntScaling = (WantInitIntScaling != 0);
 #endif
 
 #if EnableMagnify
@@ -1791,6 +1792,15 @@ LOCALFUNC char * GetSubstitutionStr(char x)
 				s = kStrOff;
 			}
 			break;
+#endif
+#if CanIntScaling
+        case 'i':
+            if (WantIntScaling) {
+                s = kStrOn;
+            } else {
+                s = kStrOff;
+            }
+            break;
 #endif
 		case 'b':
 			if (RunInBackground) {

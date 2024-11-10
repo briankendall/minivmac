@@ -2033,12 +2033,12 @@ LOCALPROC MyDrawWithOpenGL(ui4r top, ui4r left, ui4r bottom, ui4r right)
 #endif
 
 		[MyNSOpnGLCntxt makeCurrentContext];
+        glClear(GL_COLOR_BUFFER_BIT);
 
         UpdateLuminanceCopy(top, left, bottom, right);
         glRasterPos2i(left2, vMacScreenHeight * (UseMagnify ? MyWindowScale : 1) - top2);
 
         // Render everything to a texture. Then we can render the texture at whatever size we want, providing a true full screen.
-        glBindTexture(GL_TEXTURE_2D, texture);
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
         
@@ -2060,7 +2060,7 @@ LOCALPROC MyDrawWithOpenGL(ui4r top, ui4r left, ui4r bottom, ui4r right)
                 ScalingBuff + (left + top * vMacScreenWidth)
                 );
         }
-            
+        
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         
         NSSize bounds = MyNSview.frame.size;
@@ -2068,26 +2068,31 @@ LOCALPROC MyDrawWithOpenGL(ui4r top, ui4r left, ui4r bottom, ui4r right)
         double aspectRatio = (double)vMacScreenWidth / (double)vMacScreenHeight;
         
         if ((bounds.width / bounds.height) > aspectRatio) {
-            double integralScalingHeight = floor(bounds.height / vMacScreenHeight) * vMacScreenHeight;
-            double borderPercentage = (bounds.height - integralScalingHeight) / bounds.height;
-
-            if (borderPercentage < 0.06) {
-                // Use integral scaling if it doesn't create too much of a border
-                // This makes rendering full screen in 720p or 1080p look a lot better!
-                renderRect.size.height = integralScalingHeight;
+            if (UseFullScreen && WantIntScaling) {
+                double pixelRatio = MyNSview.window.backingScaleFactor;
+                renderRect.size.height = floor(bounds.height / (vMacScreenHeight * pixelRatio)) * vMacScreenHeight * pixelRatio;
             } else {
-                renderRect.size.height = bounds.height; 
+                renderRect.size.height = bounds.height;
             }
             
             renderRect.size.width = renderRect.size.height * aspectRatio;
             renderRect.origin.x = (bounds.width - renderRect.size.width) / 2;
             renderRect.origin.y = (bounds.height - renderRect.size.height) / 2;
         } else {
+            if (UseFullScreen && WantIntScaling) {
+                double pixelRatio = MyNSview.window.backingScaleFactor;
+                renderRect.size.width = floor(bounds.width / (vMacScreenWidth * pixelRatio)) * vMacScreenWidth * pixelRatio;
+            } else {
+                renderRect.size.width = bounds.width;
+            }
+            
             renderRect.size.width = bounds.width;
             renderRect.size.height = bounds.width / aspectRatio; 
             renderRect.origin.x = (bounds.width - renderRect.size.width) / 2;
             renderRect.origin.y = (bounds.height - renderRect.size.height) / 2;
         }
+        
+        glBindTexture(GL_TEXTURE_2D, texture);
         
         glEnable(GL_TEXTURE_2D);
         glColor3f(1.0, 1.0, 1.0);
@@ -4356,6 +4361,11 @@ LOCALPROC ToggleWantFullScreen(void)
 #endif
 }
 #endif
+
+LOCALPROC ToggleWantIntegerScaling(void)
+{
+    WantIntScaling = !WantIntScaling;
+}
 
 /* --- SavedTasks --- */
 
