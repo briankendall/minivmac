@@ -1167,17 +1167,51 @@ LOCALPROC HaveChangedScreenBuff(ui4r top, ui4r left,
 #elif 2 == SDL_MAJOR_VERSION
 	SDL_UnlockTexture(my_texture);
 
-	src_rect.x = left2;
-	src_rect.y = top2;
-	src_rect.w = right2 - left2;
-	src_rect.h = bottom2 - top2;
+	// Scale the texture to fill the entire window
+	// Allows for proper full screen mode
 
-	dst_rect.x = XDest;
-	dst_rect.y = YDest;
-	dst_rect.w = DestWidth;
-	dst_rect.h = DestHeight;
+	src_rect.x = 0;
+	src_rect.y = 0;
 
-	/* SDL_RenderClear(my_renderer); */
+	if (UseMagnify) {
+		src_rect.w = vMacScreenWidth * MyWindowScale;
+		src_rect.h = vMacScreenHeight * MyWindowScale;
+	}
+	else {
+		src_rect.w = vMacScreenWidth;
+		src_rect.h = vMacScreenHeight;
+	}
+
+	int rendererWidth, rendererHeight;
+	SDL_GetRendererOutputSize(my_renderer, &rendererWidth, &rendererHeight);
+
+	SDL_Rect renderRect;
+	double aspectRatio = (double)vMacScreenWidth / (double)vMacScreenHeight;
+
+	if (((double)rendererWidth / (double)rendererHeight) > aspectRatio) {
+		if (UseFullScreen && WantIntScaling) {
+			dst_rect.h = floor(rendererHeight / vMacScreenHeight) * vMacScreenHeight;
+		} else {
+			dst_rect.h = rendererHeight;
+		}
+
+		dst_rect.w = lround(dst_rect.h * aspectRatio);
+	}
+	else {
+		if (UseFullScreen && WantIntScaling) {
+			dst_rect.w = floor(rendererWidth / vMacScreenWidth) * vMacScreenWidth;
+		}
+		else {
+			dst_rect.w = rendererWidth;
+		}
+
+		dst_rect.h = lround(dst_rect.w / aspectRatio);
+	}
+
+	dst_rect.x = (rendererWidth - dst_rect.w) / 2;
+	dst_rect.y = (rendererHeight - dst_rect.h) / 2;
+
+	SDL_SetTextureScaleMode(my_texture, SDL_ScaleModeLinear);
 	SDL_RenderCopy(my_renderer, my_texture, &src_rect, &dst_rect);
 	SDL_RenderPresent(my_renderer);
 
@@ -1738,6 +1772,17 @@ LOCALPROC DoKeyCode(SDL_keysym *r, blnr down)
 #elif 2 == SDL_MAJOR_VERSION
 LOCALPROC DoKeyCode(SDL_Keysym *r, blnr down)
 {
+	int justModifiers = r->mod & (KMOD_CTRL | KMOD_SHIFT | KMOD_ALT | KMOD_GUI);
+	if (r->scancode == SDL_SCANCODE_RETURN &&
+		(justModifiers == KMOD_LALT || justModifiers == KMOD_RALT)) {
+		// Alt+Enter
+		if (down) {
+			ToggleWantFullScreen();
+			NeedWholeScreenDraw = trueblnr;
+		}
+		return;
+	}
+
 	ui3r v = SDLScan2MacKeyCode(r->scancode);
 	if (MKC_None != v) {
 		Keyboard_UpdateKeyMap2(v, down);
@@ -3995,14 +4040,24 @@ LOCALFUNC blnr CreateMainWindow(void)
 #endif
 #if MayFullScreen
 	{
+		int WinIndx = UseMagnify ? kMagStateMagnifgy : kMagStateNormal;
 		/*
 			We don't want physical screen mode to be changed in modern
 			displays, so we pass this _DESKTOP flag.
 		*/
 		flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 
-		NewWindowX = SDL_WINDOWPOS_UNDEFINED;
-		NewWindowY = SDL_WINDOWPOS_UNDEFINED;
+		if (!HavePositionWins[WinIndx]) {
+			NewWindowX = SDL_WINDOWPOS_UNDEFINED;
+			NewWindowY = SDL_WINDOWPOS_UNDEFINED;
+		}
+		else {
+			/* Go full screen on whichever display the window previous occupied! */
+			SDL_Rect windowRect = { WinPositionsX[WinIndx], WinPositionsY[WinIndx], NewWindowWidth, NewWindowHeight };
+			int targetDisplay = SDL_GetRectDisplayIndex(&windowRect);
+			NewWindowX = SDL_WINDOWPOS_CENTERED_DISPLAY(targetDisplay);
+			NewWindowY = SDL_WINDOWPOS_CENTERED_DISPLAY(targetDisplay);
+		}
 	}
 #endif
 #if VarFullScreen
@@ -4048,7 +4103,7 @@ LOCALFUNC blnr CreateMainWindow(void)
 	} else
 	if (NULL == (my_renderer = SDL_CreateRenderer(
 		my_main_wind, -1,
-		0 /* SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC */
+		SDL_RENDERER_PRESENTVSYNC /* SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC */
 			/*
 				SDL_RENDERER_ACCELERATED not needed
 				"no flags gives priority to available
@@ -4442,6 +4497,12 @@ LOCALPROC ToggleWantFullScreen(void)
 #endif
 }
 #endif
+
+LOCALPROC ToggleWantIntegerScaling(void)
+{
+	WantIntScaling = !WantIntScaling;
+	SDL_RenderClear(my_renderer);
+}
 
 /* --- SavedTasks --- */
 

@@ -91,6 +91,7 @@
 #define kStrCmdSpeedControl "Snelheidscontrole;ll (^s)"
 #define kStrCmdMagnifyToggle "Schermvergroting (^g)"
 #define kStrCmdFullScrnToggle "Gebruik het volledig scherm (^f)"
+#define kStrCmdFullScrnIntScaleToggle "Volledig scherm integer schaling (^i)"
 #define kStrCmdCtrlKeyToggle "Ge;uemuleerde ;]^m;} toets (^k)"
 #define kStrCmdReset "Herstart"
 #define kStrCmdInterrupt "Onderbreek"
@@ -114,6 +115,7 @@
 #define kStrNewMagnify "Schermvergroting is ^g."
 
 #define kStrNewFullScreen "Volledig scherm gebruiken is ^f."
+#define kStrNewIntScaling "Integer schaling is ^i."
 
 #define kStrNewCntrlKey "Ge;uemuleerde ;]^m;} toets ^k."
 

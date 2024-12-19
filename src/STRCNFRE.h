@@ -92,6 +92,7 @@
 #define kStrCmdSpeedControl "R;eeglage de la vitesse;ll (^s)"
 #define kStrCmdMagnifyToggle "Agrandissement (^g)"
 #define kStrCmdFullScrnToggle "Plein ;eecran (^f)"
+#define kStrCmdFullScrnIntScaleToggle "Mise ;`a l';eechelle des entiers en plein ;eecran (^i)"
 #define kStrCmdCtrlKeyToggle "Touche ^m virtuelle (^k)"
 #define kStrCmdReset "R;eeinitialisation"
 #define kStrCmdInterrupt "Interruption"
@@ -115,6 +116,7 @@
 #define kStrNewMagnify "Agrandissement ^g."
 
 #define kStrNewFullScreen "Mode plein ;eecran ^f."
+#define kStrNewIntScaling "La mise ;`a l';eechelle des entiers est ^i."
 
 #define kStrNewCntrlKey "Touche ^m virtuelle ^k."
 

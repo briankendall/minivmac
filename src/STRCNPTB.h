@@ -117,6 +117,7 @@
 #define kStrCmdMagnifyToggle "Zoom (^g)"
 
 #define kStrCmdFullScrnToggle "Tela Cheia (^f)"
+#define kStrCmdFullScrnIntScaleToggle "Escala de inteiros em tela cheia (^i)"
 
 #define kStrCmdCtrlKeyToggle "Alternar Tecla ;]^m;} emulada (^k)"
 
@@ -152,6 +153,7 @@
 #define kStrNewMagnify "Zoom est;ea ^g."
 
 #define kStrNewFullScreen "Tela Cheia est;ea ^f."
+#define kStrNewIntScaling "A escala de inteiros ;ee ^i."
 
 #define kStrNewCntrlKey "Emula;c;nao da tecla ;]^m;} ^k."
 

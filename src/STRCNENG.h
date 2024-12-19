@@ -91,6 +91,7 @@
 #define kStrCmdSpeedControl "Speed control;ll (^s)"
 #define kStrCmdMagnifyToggle "Magnify toggle (^g)"
 #define kStrCmdFullScrnToggle "Full screen toggle (^f)"
+#define kStrCmdFullScrnIntScaleToggle "Full screen integer scaling (^i)"
 #define kStrCmdCtrlKeyToggle "emulated ;]^m;} Key toggle (^k)"
 #define kStrCmdReset "Reset"
 #define kStrCmdInterrupt "Interrupt"
@@ -114,6 +115,7 @@
 #define kStrNewMagnify "Magnify is ^g."
 
 #define kStrNewFullScreen "Full Screen is ^f."
+#define kStrNewIntScaling "Integer Scaling is ^i."
 
 #define kStrNewCntrlKey "Emulated ;]^m;} key ^k."
 

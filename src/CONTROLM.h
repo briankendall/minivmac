@@ -495,6 +495,9 @@ enum {
 #if VarFullScreen
 	kCntrlMsgFullScreen,
 #endif
+#if CanIntScaling
+	kCntrlMsgIntScaling,
+#endif
 #if WantEnblCtrlRst
 	kCntrlMsgConfirmResetStart,
 	kCntrlMsgHaveReset,
@@ -566,6 +569,10 @@ LOCALPROC SetSpeedValue(ui3b i)
 
 #if VarFullScreen
 FORWARDPROC ToggleWantFullScreen(void);
+#endif
+
+#if CanIntScaling
+FORWARDPROC ToggleWantIntegerScaling(void);
 #endif
 
 #if IncludeHostTextClipExchange
@@ -700,6 +707,12 @@ LOCALPROC DoControlModeKey(ui3r key)
 				case MKC_F:
 					ToggleWantFullScreen();
 					ControlMessage = kCntrlMsgFullScreen;
+					break;
+#endif
+#if CanIntScaling
+				case MKC_G:
+					ToggleWantIntegerScaling();
+					ControlMessage = kCntrlMsgIntScaling;
 					break;
 #endif
 #if IncludeHostTextClipExchange
@@ -925,6 +938,9 @@ LOCALPROC DrawCellsControlModeBody(void)
 #if VarFullScreen
 			DrawCellsKeyCommand("F", kStrCmdFullScrnToggle);
 #endif
+#if CanIntScaling
+			DrawCellsKeyCommand("G", kStrCmdFullScrnIntScaleToggle);
+#endif
 #if WantEnblCtrlKtg
 			DrawCellsKeyCommand("K", kStrCmdCtrlKeyToggle);
 #endif
@@ -977,6 +993,11 @@ LOCALPROC DrawCellsControlModeBody(void)
 #if VarFullScreen
 		case kCntrlMsgFullScreen:
 			DrawCellsOneLineStr(kStrNewFullScreen);
+			break;
+#endif
+#if CanIntScaling
+		case kCntrlMsgIntScaling:
+			DrawCellsOneLineStr(kStrNewIntScaling);
 			break;
 #endif
 #if IncludeHostTextClipExchange
