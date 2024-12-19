@@ -496,7 +496,7 @@ enum {
 	kCntrlMsgFullScreen,
 #endif
 #if CanIntScaling
-    kCntrlMsgIntScaling,
+	kCntrlMsgIntScaling,
 #endif
 #if WantEnblCtrlRst
 	kCntrlMsgConfirmResetStart,
@@ -936,10 +936,10 @@ LOCALPROC DrawCellsControlModeBody(void)
 			DrawCellsKeyCommand("M", kStrCmdMagnifyToggle);
 #endif
 #if VarFullScreen
-            DrawCellsKeyCommand("F", kStrCmdFullScrnToggle);
+			DrawCellsKeyCommand("F", kStrCmdFullScrnToggle);
 #endif
 #if CanIntScaling
-            DrawCellsKeyCommand("G", kStrCmdFullScrnIntScaleToggle);
+			DrawCellsKeyCommand("G", kStrCmdFullScrnIntScaleToggle);
 #endif
 #if WantEnblCtrlKtg
 			DrawCellsKeyCommand("K", kStrCmdCtrlKeyToggle);

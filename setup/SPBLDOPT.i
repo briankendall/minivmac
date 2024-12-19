@@ -384,18 +384,18 @@ LOCALFUNC tMyErr ChooseInitIntScaling(void)
 {
 	tMyErr err;
 
-    CanIntScaling = (gbk_apifam_sd2 == gbo_apifam || gbk_apifam_cco == gbo_apifam);
+	CanIntScaling = (gbk_apifam_sd2 == gbo_apifam || gbk_apifam_cco == gbo_apifam);
 
 	err = kMyErr_noErr;
 
 	if (nanblnr == WantInitIntScaling) {
 		WantInitIntScaling = dfo_InitIntScaling();
 	} else {
-        if (!CanIntScaling) {
-            err = ReportParseFailure(
-                "-integer-scaling is only supported on SDL2 and Cocoa builds");
-        }
-    }
+		if (!CanIntScaling) {
+			err = ReportParseFailure(
+				"-integer-scaling is only supported on SDL2 and Cocoa builds");
+		}
+	}
 
 	return err;
 }

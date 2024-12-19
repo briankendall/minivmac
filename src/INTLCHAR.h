@@ -1794,13 +1794,13 @@ LOCALFUNC char * GetSubstitutionStr(char x)
 			break;
 #endif
 #if CanIntScaling
-        case 'i':
-            if (WantIntScaling) {
-                s = kStrOn;
-            } else {
-                s = kStrOff;
-            }
-            break;
+		case 'i':
+			if (WantIntScaling) {
+				s = kStrOn;
+			} else {
+				s = kStrOff;
+			}
+			break;
 #endif
 		case 'b':
 			if (RunInBackground) {
