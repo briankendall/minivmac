@@ -518,6 +518,12 @@ LOCALFUNC blnr LoadPrefs(Prefs *prefs) {
 			int speed = 0;
 			sscanf(input, "%d", &speed);
 			SetSpeedValue((ui3b)speed);
+		} else if(strcmp(key, "intscaling") == 0) {
+			int intScaling = 0;
+			if (sscanf(input, "%d", &intScaling) != 1) {
+				continue;
+			}
+			WantIntScaling = (intScaling != 0);
 		}
 	}
 
